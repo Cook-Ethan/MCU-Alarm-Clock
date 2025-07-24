@@ -21,8 +21,6 @@
 #include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
-#include <stdio.h>
-#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,6 +46,8 @@
 
 /* USER CODE BEGIN PV */
 char uart_buf[64];
+uint8_t clock_hour = 0;
+uint8_t clock_minute = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -168,8 +168,32 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 	HAL_RTC_GetTime(hrtc, &time, RTC_FORMAT_BIN);
 	HAL_RTC_GetDate(hrtc, &date, RTC_FORMAT_BIN);
 
-	sprintf(uart_buf, "Current time: %02d:%02d\r\n", time.Hours, time.Minutes);
+	clock_hour = time.Hours;
+	clock_minute = time.Minute;
+
+	sprintf(uart_buf, "Current time: %02d:%02d\r\n", clock_hour, clock_minute);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == Hour_Inc_Pin)
+	{
+		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
+		{
+			clock_hour = (clock_hour + 1) % 24;
+
+			RTC_SetTime(clock_hour, clock_minute, 0);
+		}
+	} else if (GPIO_Pin == Min_Inc_Pin)
+	{
+		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
+		{
+			clock_minute = (clock_minute + 1) % 24;
+
+			RTC_SetTime(clock_hour, clock_minute, 0);
+		}
+	}
 }
 /* USER CODE END 4 */
 

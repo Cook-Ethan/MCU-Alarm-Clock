@@ -21,7 +21,7 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-
+void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
@@ -167,5 +167,16 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
+{
+	RTC_TimeTypeDef sTime = {0};
 
+	sTime.Hours = hours;
+	sTime.Minutes = minutes;
+	sTime.Seconds = seconds;
+	sTime.DayLighSaving = RTC_DAYLIGHTSAVING_NONE;
+	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
+	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+}
 /* USER CODE END 1 */
