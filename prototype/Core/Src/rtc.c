@@ -174,7 +174,7 @@ void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
 	sTime.Hours = hours;
 	sTime.Minutes = minutes;
 	sTime.Seconds = seconds;
-	sTime.DayLighSaving = RTC_DAYLIGHTSAVING_NONE;
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);

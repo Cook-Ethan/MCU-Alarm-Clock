@@ -24,7 +24,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -169,7 +170,7 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 	HAL_RTC_GetDate(hrtc, &date, RTC_FORMAT_BIN);
 
 	clock_hour = time.Hours;
-	clock_minute = time.Minute;
+	clock_minute = time.Minutes;
 
 	sprintf(uart_buf, "Current time: %02d:%02d\r\n", clock_hour, clock_minute);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
@@ -185,7 +186,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
 		}
-	} else if (GPIO_Pin == Min_Inc_Pin)
+	} else if (GPIO_Pin == Minute_Inc_Pin)
 	{
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
 		{
