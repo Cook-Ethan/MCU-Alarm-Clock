@@ -172,7 +172,7 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 	clock_hour = time.Hours;
 	clock_minute = time.Minutes;
 
-	sprintf(uart_buf, "Current time: %02d:%02d\r\n", clock_hour, clock_minute);
+	sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
 }
 
@@ -185,14 +185,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			clock_hour = (clock_hour + 1) % 24;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
+			sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
+			HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
 		}
 	} else if (GPIO_Pin == Minute_Inc_Pin)
 	{
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
 		{
-			clock_minute = (clock_minute + 1) % 24;
+			clock_minute = (clock_minute + 1) % 60;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
+			sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
+			HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
 		}
 	}
 }
