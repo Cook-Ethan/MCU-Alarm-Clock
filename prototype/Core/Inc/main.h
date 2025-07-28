@@ -60,6 +60,10 @@ void Error_Handler(void);
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
+#define Alarm_Indicator_Pin GPIO_PIN_0
+#define Alarm_Indicator_GPIO_Port GPIOC
+#define Pm_Indicator_Pin GPIO_PIN_1
+#define Pm_Indicator_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -73,12 +77,14 @@ void Error_Handler(void);
 #define Snooze_Pin GPIO_PIN_8
 #define Snooze_GPIO_Port GPIOA
 #define Snooze_EXTI_IRQn EXTI9_5_IRQn
-#define Hour_Inc_Pin GPIO_PIN_9
-#define Hour_Inc_GPIO_Port GPIOA
-#define Hour_Inc_EXTI_IRQn EXTI9_5_IRQn
-#define Minute_Inc_Pin GPIO_PIN_10
-#define Minute_Inc_GPIO_Port GPIOA
-#define Minute_Inc_EXTI_IRQn EXTI15_10_IRQn
+#define Hour_Increment_Pin GPIO_PIN_9
+#define Hour_Increment_GPIO_Port GPIOA
+#define Hour_Increment_EXTI_IRQn EXTI9_5_IRQn
+#define Minute_Increment_Pin GPIO_PIN_10
+#define Minute_Increment_GPIO_Port GPIOA
+#define Minute_Increment_EXTI_IRQn EXTI15_10_IRQn
+#define Alarm_On_Pin GPIO_PIN_11
+#define Alarm_On_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

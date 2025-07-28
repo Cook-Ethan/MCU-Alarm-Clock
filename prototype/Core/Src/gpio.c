@@ -50,6 +50,9 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, Alarm_Indicator_Pin|Pm_Indicator_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
@@ -58,6 +61,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : Alarm_Indicator_Pin Pm_Indicator_Pin */
+  GPIO_InitStruct.Pin = Alarm_Indicator_Pin|Pm_Indicator_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -65,14 +75,14 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Set_Clock_Pin Set_Alarm_Pin */
-  GPIO_InitStruct.Pin = Set_Clock_Pin|Set_Alarm_Pin;
+  /*Configure GPIO pins : Set_Clock_Pin Set_Alarm_Pin Alarm_On_Pin */
+  GPIO_InitStruct.Pin = Set_Clock_Pin|Set_Alarm_Pin|Alarm_On_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Snooze_Pin Hour_Inc_Pin Minute_Inc_Pin */
-  GPIO_InitStruct.Pin = Snooze_Pin|Hour_Inc_Pin|Minute_Inc_Pin;
+  /*Configure GPIO pins : Snooze_Pin Hour_Increment_Pin Minute_Increment_Pin */
+  GPIO_InitStruct.Pin = Snooze_Pin|Hour_Increment_Pin|Minute_Increment_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

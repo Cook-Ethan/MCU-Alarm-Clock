@@ -54,7 +54,7 @@ uint8_t clock_minute = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void display_time(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -172,33 +172,41 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 	clock_hour = time.Hours;
 	clock_minute = time.Minutes;
 
-	sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+	display_time();
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if (GPIO_Pin == Hour_Inc_Pin)
+	if (GPIO_Pin == Hour_Increment_Pin)
 	{
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
 		{
 			clock_hour = (clock_hour + 1) % 24;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
-			sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
-			HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+			display_time();
 		}
-	} else if (GPIO_Pin == Minute_Inc_Pin)
+	} else if (GPIO_Pin == Minute_Increment_Pin)
 	{
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Clock_Pin) == GPIO_PIN_RESET)
 		{
 			clock_minute = (clock_minute + 1) % 60;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
-			sprintf(uart_buf, "Clock: %02d:%02d\r\n", clock_hour, clock_minute);
-			HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+			display_time();
 		}
 	}
+}
+
+void display_time(void)
+{
+	char *pm_indicator = (clock_hour / 12) ? "PM" : "AM";
+	uint8_t clock_hour_display = (clock_hour % 12) ? clock_hour % 12 : 12;
+
+	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) clock_hour/12);
+
+	sprintf(uart_buf, "Clock: %02d:%02d %s\r\n", clock_hour_display, clock_minute, pm_indicator);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
 }
 /* USER CODE END 4 */
 
