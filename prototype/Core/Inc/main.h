@@ -85,6 +85,7 @@ void Error_Handler(void);
 #define Minute_Increment_EXTI_IRQn EXTI15_10_IRQn
 #define Alarm_On_Pin GPIO_PIN_11
 #define Alarm_On_GPIO_Port GPIOA
+#define Alarm_On_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
 
