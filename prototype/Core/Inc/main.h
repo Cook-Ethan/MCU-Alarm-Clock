@@ -74,6 +74,7 @@ void Error_Handler(void);
 #define Set_Clock_GPIO_Port GPIOA
 #define Set_Alarm_Pin GPIO_PIN_7
 #define Set_Alarm_GPIO_Port GPIOA
+#define Set_Alarm_EXTI_IRQn EXTI9_5_IRQn
 #define Snooze_Pin GPIO_PIN_8
 #define Snooze_GPIO_Port GPIOA
 #define Snooze_EXTI_IRQn EXTI9_5_IRQn

@@ -50,18 +50,21 @@
 char uart_buf[64];
 volatile uint8_t clock_hour = 0;
 volatile uint8_t clock_minute = 0;
+volatile uint8_t alarm_hour = 0;
+volatile uint8_t alarm_minute = 0;
 
-GPIO_PinState alarm_enabled;
-GPIO_PinState alarm_triggered = GPIO_PIN_RESET;
-GPIO_PinState buzzer_enabled = GPIO_PIN_RESET;
+bool alarm_enabled;
+bool alarm_triggered = false;
+bool buzzer_enabled = false;
 
-volatile bool wakeup_alarm_update = true;
+volatile bool wakeup_time_update = true;
 volatile bool wakeup_buzzer_update = false;
 volatile bool wakeup_alarm_trigger = false;
 volatile bool wakeup_alarm_state = false;
 volatile bool wakeup_buzzer_state = false;
 volatile bool wakeup_hour_increment = false;
 volatile bool wakeup_minute_increment = false;
+volatile bool wakeup_alarm_display = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,16 +116,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("Alarm clock started.\r\n");
 
-  alarm_enabled = HAL_GPIO_ReadPin(GPIOA, Alarm_On_Pin);
+  alarm_enabled = HAL_GPIO_ReadPin(GPIOA, Alarm_On_Pin) == GPIO_PIN_SET;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	if (wakeup_alarm_update)
+	if (wakeup_time_update)
 	{
-		wakeup_alarm_update = false;
+		wakeup_time_update = false;
 		RTC_TimeTypeDef time;
 		RTC_DateTypeDef date;
 
@@ -140,32 +143,37 @@ int main(void)
 		if (HAL_GPIO_ReadPin(GPIOA, Alarm_On_Pin) == GPIO_PIN_RESET)
 		{
 			HAL_GPIO_WritePin(GPIOC, Alarm_Indicator_Pin, GPIO_PIN_RESET);
-			alarm_enabled = GPIO_PIN_RESET;
+			alarm_enabled = false;
+			alarm_triggered = false;
+			buzzer_off();
+			HAL_RTCEx_DeactivateWakeUpTimer(hrtc);
 		}
 		else
 		{
 			HAL_GPIO_WritePin(GPIOC, Alarm_Indicator_Pin, GPIO_PIN_SET);
-			alarm_enabled = GPIO_PIN_SET;
+			alarm_enabled = true;
 		}
 	}
 	if (wakeup_buzzer_update)
 	{
-		wakeup_buzzer_update = false;
-		buzzer_enabled = (buzzer_enabled == GPIO_PIN_SET) ? GPIO_PIN_RESET : GPIO_PIN_SET;
-		if (buzzer_enabled == GPIO_PIN_SET)
+		if (buzzer_enabled)
 		{
-			printf("Buzzer On\r\n");
+			buzzer_off();
 		} else
 		{
-			printf("Buzzer Off\r\n");
+			buzzer_on();
 		}
 
 	}
-	if (wakeup_alarm_trigger && alarm_enabled)
+	if (wakeup_alarm_trigger)
 	{
 		wakeup_alarm_triggered == false;
-		HAL_RTCEx_SetWakeUpTimer_IT(hrtc, BUZZER_TIME_ON, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-
+		if (alarm_enabled)
+		{
+			alarm_triggered = true;
+			buzzer_on();
+			HAL_RTCEx_SetWakeUpTimer_IT(hrtc, BUZZER_TIME_ON, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+		}
 	}
 	if (wakeup_hour_increment)
 	{
@@ -177,6 +185,12 @@ int main(void)
 			RTC_SetTime(clock_hour, clock_minute, 0);
 			display_time();
 		}
+		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
+		{
+			alarm_hour = (alarm_hour + 1) % 24;
+
+			RTC_SetAlarm(alarm_hour, alarm_minute, 0);
+		}
 	}
 	if (wakeup_minute_increment)
 	{
@@ -186,6 +200,40 @@ int main(void)
 			clock_minute = (clock_minute + 1) % 60;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
+			display_time();
+		}
+		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
+		{
+			alarm_minute = (alarm_minute + 1) % 60;
+
+			RTC_SetAlarm(alarm_hour, alarm_minute, 0);
+		}
+	}
+	if (wakeup_snooze)
+	{
+		wakeup_snooze = false;
+
+		if (alarm_triggered)
+		{
+
+			alarm_hour = (alarm_hour + alarm_minute/60) % 24;
+			alarm_minute = (alarm_minute + 9) % 60;
+			alarm_triggered = false;
+			buzzer_off();
+
+			HAL_RTCEx_DeactivateWakeUpTimer(hrtc);
+			RTC_SetAlarm(alarm_hour, alarm_minute);
+		}
+	}
+	if (wakeup_alarm_display)
+	{
+		wakeup_alarm_display = false;
+		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
+		{
+			display_alarm();
+		}
+		else
+		{
 			display_time();
 		}
 	}
@@ -247,14 +295,28 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
-	wakeup_alarm_update = true;
+	wakeup_time_update = true;
+}
+
+void HAL_RTC_AlarmBEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	wakeup_alarm_trigger = true;
+}
+
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	wakeup_buzzer_update = true;
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	if (GPIO_Pin == Set_Alarm_Pin)
+	{
+		wakeup_alarm_display = true;
+	}
 	if (GPIO_Pin == Alarm_On_Pin)
 	{
-		wakeup_alarm_state = 1;
+		wakeup_alarm_state = true;
 	}
 	else if (GPIO_Pin == Hour_Increment_Pin)
 	{
@@ -275,6 +337,29 @@ void display_time(void)
 
 	sprintf(uart_buf, "Clock: %02d:%02d %s\r\n", clock_hour_display, clock_minute, pm_indicator);
 	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+}
+
+void display_alarm(void)
+{
+	char *pm_indicator = (alarm_hour / 12) ? "PM" : "AM";
+	uint8_t alarm_hour_display = (alarm_hour % 12) ? alarm_hour % 12 : 12;
+
+	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) alarm_hour/12);
+
+	sprintf(uart_buf, "Alarm: %02d:%02d %s\r\n", alarm_hour_display, alarm_minute, pm_indicator);
+	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+}
+
+void buzzer_on(void)
+{
+	buzzer_enabled = true;
+	printf("Buzzer on\r\n");
+}
+
+void buzzer_off(void)
+{
+	buzzer_enabled = false;
+	printf("Buzzer off\r\n");
 }
 /* USER CODE END 4 */
 
