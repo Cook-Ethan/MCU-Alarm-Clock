@@ -21,7 +21,7 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
+
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
@@ -99,24 +99,6 @@ void MX_RTC_Init(void)
   {
     Error_Handler();
   }
-
-  /** Enable the Alarm B
-  */
-  sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
-  sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-  sAlarm.AlarmDateWeekDay = 0x1;
-  sAlarm.Alarm = RTC_ALARM_B;
-  if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Enable the WakeUp
-  */
-  if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
@@ -185,23 +167,5 @@ void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
 	sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
 	HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-}
-
-void RTC_SetAlarm(uint8_t hours, uint8_t minutes, uint8_t seconds)
-{
-	RTC_AlarmTypeDef sAlarm = {0};
-
-	sAlarm.AlarmTime.Hours = hours;
-	sAlarm.AlarmTime.Minutes = minutes;
-	sAlarm.AlarmTime.Seconds = seconds;
-	sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-	sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
-	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
-	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
-	sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-	sAlarm.AlarmDateWeekDay = 0x1;
-	sAlarm.Alarm = RTC_ALARM_B;
-
-	HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
 }
 /* USER CODE END 1 */
