@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "rtc.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -36,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BUZZER_TIME_ON 200
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -69,8 +70,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void display_time(void);
 void display_alarm(void);
-void buzzer_on(void);
-void buzzer_off(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -113,6 +112,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_RTC_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   printf("Alarm clock started.\r\n");
   /* USER CODE END 2 */
@@ -135,10 +135,11 @@ int main(void)
 
 		if (clock_hour == alarm_hour && clock_minute == alarm_minute)
 		{
-			alarm_triggered = true;
 			if (alarm_enabled)
 			{
-				buzzer_on();
+				alarm_triggered = true;
+				HAL_TIM_Base_Start_IT(&htim6);
+				HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_SET);
 			}
 		}
 
@@ -151,7 +152,8 @@ int main(void)
 		{
 			if (alarm_triggered)
 			{
-				buzzer_off();
+				HAL_TIM_Base_Stop_IT(&htim6);
+				HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_RESET);
 			}
 			HAL_GPIO_WritePin(GPIOC, Alarm_Indicator_Pin, GPIO_PIN_RESET);
 			alarm_enabled = false;
@@ -205,7 +207,8 @@ int main(void)
 			alarm_hour = (clock_hour + clock_minute/60) % 24;
 			alarm_minute = (clock_minute + 9) % 60;
 			alarm_triggered = false;
-			buzzer_off();
+			HAL_TIM_Base_Stop_IT(&htim6);
+			HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_RESET);
 		}
 	}
 	if (wakeup_alarm_display)
@@ -305,6 +308,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM6)
+	{
+		HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
+	}
+}
+
 void display_time(void)
 {
 	char *pm_indicator = (clock_hour / 12) ? "PM" : "AM";
@@ -324,18 +335,6 @@ void display_alarm(void)
 	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) alarm_hour/12);
 
 	sprintf(uart_buf, "Alarm: %02d:%02d %s\r\n", alarm_hour_display, alarm_minute, pm_indicator);
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
-}
-
-void buzzer_on(void)
-{
-	sprintf(uart_buf, "BUZZER ON\r\n");
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
-}
-
-void buzzer_off(void)
-{
-	sprintf(uart_buf, "BUZZER OFF\r\n");
 	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
 }
 /* USER CODE END 4 */
