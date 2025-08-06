@@ -93,6 +93,8 @@ volatile uint8_t current_digit = 0;
 bool alarm_enabled;
 bool alarm_triggered = false;
 
+volatile bool is_display_alarm = 0;
+
 volatile bool wakeup_time_update = true;
 volatile bool wakeup_alarm_state = true;
 volatile bool wakeup_hour_increment = false;
@@ -180,8 +182,6 @@ int main(void)
 				HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_SET);
 			}
 		}
-
-		display_time();
 	}
 	if (wakeup_alarm_state)
 	{
@@ -211,12 +211,10 @@ int main(void)
 			clock_hour = (clock_hour + 1) % 24;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
-			display_time();
 		}
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
 		{
 			alarm_hour = (alarm_hour + 1) % 24;
-			display_alarm();
 		}
 	}
 	if (wakeup_minute_increment)
@@ -227,12 +225,10 @@ int main(void)
 			clock_minute = (clock_minute + 1) % 60;
 
 			RTC_SetTime(clock_hour, clock_minute, 0);
-			display_time();
 		}
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
 		{
 			alarm_minute = (alarm_minute + 1) % 60;
-			display_alarm();
 		}
 	}
 	if (wakeup_snooze)
@@ -254,11 +250,11 @@ int main(void)
 		wakeup_alarm_display = false;
 		if (HAL_GPIO_ReadPin(GPIOA, Set_Alarm_Pin) == GPIO_PIN_RESET)
 		{
-			display_alarm();
+			is_display_alarm = true;
 		}
 		else
 		{
-			display_time();
+			is_display_alarm = false;
 		}
 	}
     /* USER CODE END WHILE */
@@ -354,7 +350,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	else if (htim->Instance == TIM7)
 	{
-		display_time();
+		if (is_display_alarm)
+		{
+			display_alarm();
+		} else
+		{
+			display_time();
+		}
 	}
 }
 
@@ -362,10 +364,9 @@ void display_time(void)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		HAL_GPIO_WritePin(GPIOB, digit_pins[i], GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, digit_pins[i], GPIO_PIN_SET);
 	}
 
-	char *pm_indicator = (clock_hour / 12) ? "PM" : "AM";
 	uint8_t clock_hour_display = (clock_hour % 12) ? clock_hour % 12 : 12;
 
 	uint8_t display[4] = {
@@ -377,12 +378,17 @@ void display_time(void)
 
 	uint8_t seg = segment_map[display[current_digit]];
 
+	if (current_digit == 0 && display[0] == 0)
+	{
+		seg = 0x00;
+	}
+
 	for (int i = 0; i < 8; i++)
 	{
 		HAL_GPIO_WritePin(GPIOB, segment_pins[i], (seg & (1 << i)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 	}
 
-	HAL_GPIO_WritePin(GPIOB, digit_pins[current_digit], GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, digit_pins[current_digit], GPIO_PIN_RESET);
 
 	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) clock_hour/12);
 
@@ -392,13 +398,37 @@ void display_time(void)
 
 void display_alarm(void)
 {
-	char *pm_indicator = (alarm_hour / 12) ? "PM" : "AM";
+	for (int i = 0; i < 4; i++)
+	{
+		HAL_GPIO_WritePin(GPIOB, digit_pins[i], GPIO_PIN_SET);
+	}
+
 	uint8_t alarm_hour_display = (alarm_hour % 12) ? alarm_hour % 12 : 12;
+
+	uint8_t display[4] = {
+							(alarm_hour_display / 10) & 0x0F,
+							(alarm_hour_display % 10) & 0x0F,
+							(alarm_minute / 10) & 0x0F,
+							(alarm_minute % 10) & 0x0F
+						};
+
+	uint8_t seg = segment_map[display[current_digit]];
+
+	if (current_digit == 0 && display[0] == 0)
+	{
+		seg = 0x00;
+	}
+
+	for (int i = 0; i < 8; i++)
+	{
+		HAL_GPIO_WritePin(GPIOB, segment_pins[i], (seg & (1 << i)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	}
+
+	HAL_GPIO_WritePin(GPIOB, digit_pins[current_digit], GPIO_PIN_RESET);
 
 	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) alarm_hour/12);
 
-	sprintf(uart_buf, "Alarm: %02d:%02d %s\r\n", alarm_hour_display, alarm_minute, pm_indicator);
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+	current_digit = (current_digit + 1) % 4;
 }
 /* USER CODE END 4 */
 

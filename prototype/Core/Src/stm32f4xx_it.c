@@ -209,6 +209,7 @@ void EXTI9_5_IRQHandler(void)
 
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(Set_Alarm_Pin);
+  HAL_GPIO_EXTI_IRQHandler(Snooze_Pin);
   HAL_GPIO_EXTI_IRQHandler(Hour_Increment_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 

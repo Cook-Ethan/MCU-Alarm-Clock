@@ -60,7 +60,7 @@ void Error_Handler(void);
 #define BUZZER_PSC 8399
 #define BUZZER_PERIOD 4999
 #define DISPLAY_PSC 8399
-#define DISPLAY_PERIOD 999
+#define DISPLAY_PERIOD 24
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
@@ -91,6 +91,9 @@ void Error_Handler(void);
 #define Seg_G_GPIO_Port GPIOB
 #define Seg_H_Pin GPIO_PIN_12
 #define Seg_H_GPIO_Port GPIOB
+#define Snooze_Pin GPIO_PIN_8
+#define Snooze_GPIO_Port GPIOA
+#define Snooze_EXTI_IRQn EXTI9_5_IRQn
 #define Hour_Increment_Pin GPIO_PIN_9
 #define Hour_Increment_GPIO_Port GPIOA
 #define Hour_Increment_EXTI_IRQn EXTI9_5_IRQn
