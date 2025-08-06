@@ -48,11 +48,47 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+const uint16_t digit_pins[4] = {
+		Dig_1_Pin,
+		Dig_2_Pin,
+		Dig_3_Pin,
+		Dig_4_Pin
+};
+const uint16_t segment_pins[8] = {
+		Seg_A_Pin,
+		Seg_B_Pin,
+		Seg_C_Pin,
+		Seg_D_Pin,
+		Seg_E_Pin,
+		Seg_F_Pin,
+		Seg_G_Pin,
+		Seg_H_Pin
+};
+const uint8_t segment_map[16] = {
+		0x3F,	// 0
+		0x06,	// 1
+		0x5B,	// 2
+		0x4F,	// 3
+		0x66,	// 4
+		0x6D,	// 5
+		0x7D,	// 6
+		0x07,	// 7
+		0x7F,	// 8
+		0x6F,	// 9
+		0x77,	// A
+		0x7C,	// b
+		0x39,	// C
+		0x5E,	// d
+		0x79,	// E
+		0x71	// F
+};
 char uart_buf[64];
 volatile uint8_t clock_hour = 0;
 volatile uint8_t clock_minute = 0;
 volatile uint8_t alarm_hour = 0;
 volatile uint8_t alarm_minute = 0;
+
+volatile uint8_t current_digit = 0;
 
 bool alarm_enabled;
 bool alarm_triggered = false;
@@ -113,8 +149,10 @@ int main(void)
   MX_USART2_UART_Init();
   MX_RTC_Init();
   MX_TIM6_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   printf("Alarm clock started.\r\n");
+  HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -314,17 +352,42 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		HAL_GPIO_TogglePin(GPIOC, Buzzer_Pin);
 	}
+	else if (htim->Instance == TIM7)
+	{
+		display_time();
+	}
 }
 
 void display_time(void)
 {
+	for (int i = 0; i < 4; i++)
+	{
+		HAL_GPIO_WritePin(GPIOB, digit_pins[i], GPIO_PIN_RESET);
+	}
+
 	char *pm_indicator = (clock_hour / 12) ? "PM" : "AM";
 	uint8_t clock_hour_display = (clock_hour % 12) ? clock_hour % 12 : 12;
 
+	uint8_t display[4] = {
+							(clock_hour_display / 10) & 0x0F,
+							(clock_hour_display % 10) & 0x0F,
+							(clock_minute / 10) & 0x0F,
+							(clock_minute % 10) & 0x0F
+						};
+
+	uint8_t seg = segment_map[display[current_digit]];
+
+	for (int i = 0; i < 8; i++)
+	{
+		HAL_GPIO_WritePin(GPIOB, segment_pins[i], (seg & (1 << i)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	}
+
+	HAL_GPIO_WritePin(GPIOB, digit_pins[current_digit], GPIO_PIN_SET);
+
 	HAL_GPIO_WritePin(GPIOC, Pm_Indicator_Pin, (GPIO_PinState) clock_hour/12);
 
-	sprintf(uart_buf, "Clock: %02d:%02d %s\r\n", clock_hour_display, clock_minute, pm_indicator);
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, strlen(uart_buf), HAL_MAX_DELAY);
+	current_digit = (current_digit + 1) % 4;
+
 }
 
 void display_alarm(void)

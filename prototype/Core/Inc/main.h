@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define BUZZER_PSC 8399
 #define BUZZER_PERIOD 4999
+#define DISPLAY_PSC 8399
+#define DISPLAY_PERIOD 999
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
@@ -79,9 +81,16 @@ void Error_Handler(void);
 #define Set_Alarm_Pin GPIO_PIN_7
 #define Set_Alarm_GPIO_Port GPIOA
 #define Set_Alarm_EXTI_IRQn EXTI9_5_IRQn
-#define Snooze_Pin GPIO_PIN_8
-#define Snooze_GPIO_Port GPIOA
-#define Snooze_EXTI_IRQn EXTI9_5_IRQn
+#define Dig_1_Pin GPIO_PIN_0
+#define Dig_1_GPIO_Port GPIOB
+#define Dig_2_Pin GPIO_PIN_1
+#define Dig_2_GPIO_Port GPIOB
+#define Dig_3_Pin GPIO_PIN_2
+#define Dig_3_GPIO_Port GPIOB
+#define Seg_G_Pin GPIO_PIN_10
+#define Seg_G_GPIO_Port GPIOB
+#define Seg_H_Pin GPIO_PIN_12
+#define Seg_H_GPIO_Port GPIOB
 #define Hour_Increment_Pin GPIO_PIN_9
 #define Hour_Increment_GPIO_Port GPIOA
 #define Hour_Increment_EXTI_IRQn EXTI9_5_IRQn
@@ -91,6 +100,20 @@ void Error_Handler(void);
 #define Alarm_On_Pin GPIO_PIN_11
 #define Alarm_On_GPIO_Port GPIOA
 #define Alarm_On_EXTI_IRQn EXTI15_10_IRQn
+#define Dig_4_Pin GPIO_PIN_3
+#define Dig_4_GPIO_Port GPIOB
+#define Seg_A_Pin GPIO_PIN_4
+#define Seg_A_GPIO_Port GPIOB
+#define Seg_B_Pin GPIO_PIN_5
+#define Seg_B_GPIO_Port GPIOB
+#define Seg_C_Pin GPIO_PIN_6
+#define Seg_C_GPIO_Port GPIOB
+#define Seg_D_Pin GPIO_PIN_7
+#define Seg_D_GPIO_Port GPIOB
+#define Seg_E_Pin GPIO_PIN_8
+#define Seg_E_GPIO_Port GPIOB
+#define Seg_F_Pin GPIO_PIN_9
+#define Seg_F_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
