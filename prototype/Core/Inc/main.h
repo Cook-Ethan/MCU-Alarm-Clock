@@ -57,9 +57,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BUZZER_PSC 8399
+#define BUZZER_PSC 1599
 #define BUZZER_PERIOD 4999
-#define DISPLAY_PSC 8399
+#define DISPLAY_PSC 1599
 #define DISPLAY_PERIOD 24
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
